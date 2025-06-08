@@ -10,8 +10,8 @@ interface InputAreaProps {
 }
 
 /**
- * T3-style input area component with modern design and interactions
- * Features auto-resizing textarea, smooth animations, and proper accessibility
+ * Modern input area component with clean design and grouped icons
+ * Features auto-resizing textarea, speech bubble icon container, and smooth interactions
  */
 function InputArea({ input, handleInputChange, handleSubmit, disabled }: InputAreaProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -67,60 +67,69 @@ function InputArea({ input, handleInputChange, handleSubmit, disabled }: InputAr
 
   return (
     <form onSubmit={onSubmit} className="relative">
-      <div className="relative flex items-end gap-3 rounded-2xl border border-macchiato-surface0 bg-macchiato-surface0/50 p-3 transition-all duration-200 hover:border-macchiato-surface1 focus-within:border-macchiato-mauve/50 focus-within:bg-macchiato-surface0/70">
+      <div className="relative flex items-end gap-3 rounded-xl border border-macchiato-surface0 bg-macchiato-surface0/30 p-4 transition-all duration-200 hover:border-macchiato-surface1 focus-within:border-macchiato-surface1">
         {/* Textarea */}
         <textarea
           ref={textareaRef}
           value={input}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
-          placeholder="Ask me anything..."
+          placeholder="Type your message here..."
           disabled={disabled}
           rows={1}
-          className="flex-1 resize-none bg-transparent text-macchiato-text placeholder:text-macchiato-subtext0 focus:outline-none disabled:opacity-50 text-sm leading-relaxed min-h-[20px] max-h-[176px] overflow-y-auto scrollbar-thin scrollbar-thumb-macchiato-surface2 scrollbar-track-transparent"
-          style={{ 
-            scrollbarWidth: "thin",
-            scrollbarColor: "rgb(91 96 120) transparent" 
-          }}
+          className="flex-1 resize-none bg-transparent text-macchiato-text placeholder:text-macchiato-subtext0 focus:outline-none disabled:opacity-50 text-sm leading-relaxed min-h-[20px] max-h-[176px] overflow-y-auto"
         />
 
-        {/* Send Button */}
-        <button
-          type="submit"
-          disabled={!input.trim() || disabled}
-          className="flex h-8 w-8 items-center justify-center rounded-lg bg-macchiato-mauve text-macchiato-crust transition-all duration-200 hover:bg-macchiato-mauve/90 focus:outline-none focus:ring-2 focus:ring-macchiato-mauve/50 focus:ring-offset-2 focus:ring-offset-macchiato-base disabled:bg-macchiato-surface1 disabled:text-macchiato-subtext0"
-          aria-label="Send message"
-        >
-          {disabled ? (
-            <LoadingIcon className="h-4 w-4 animate-spin" />
-          ) : (
-            <SendIcon className="h-4 w-4" />
-          )}
-        </button>
-      </div>
-
-      {/* Hint Text */}
-      <div className="mt-2 flex items-center justify-between text-xs text-macchiato-subtext0">
-        <span>
-          Press{" "}
-          <kbd className="rounded bg-macchiato-surface0 px-1 py-0.5 font-mono">
-            Enter
-          </kbd>{" "}
-          to send,{" "}
-          <kbd className="rounded bg-macchiato-surface0 px-1 py-0.5 font-mono">
-            Shift + Enter
-          </kbd>{" "}
-          for new line
-        </span>
-        <span className="hidden sm:block">
-          {input.length > 0 && `${input.length} characters`}
-        </span>
+        {/* Icon Group - Speech Bubble Style */}
+        <div className="flex items-center bg-macchiato-surface1 rounded-full px-2 py-1 gap-1">
+          <button
+            type="button"
+            className="flex h-6 w-6 items-center justify-center text-macchiato-subtext0 hover:text-macchiato-text transition-colors rounded-full hover:bg-macchiato-surface0"
+            aria-label="Happy face"
+          >
+            <HappyIcon className="h-4 w-4" />
+          </button>
+          <button
+            type="submit"
+            disabled={!input.trim() || disabled}
+            className="flex h-6 w-6 items-center justify-center rounded-full bg-macchiato-mauve text-macchiato-crust transition-all duration-200 hover:bg-macchiato-mauve/90 focus:outline-none focus:ring-2 focus:ring-macchiato-mauve/50 disabled:bg-macchiato-surface1 disabled:text-macchiato-subtext0"
+            aria-label="Send message"
+          >
+            {disabled ? (
+              <LoadingIcon className="h-3 w-3 animate-spin" />
+            ) : (
+              <SendIcon className="h-3 w-3" />
+            )}
+          </button>
+        </div>
       </div>
     </form>
   );
 }
 
-// Send icon component
+// Icon components
+function HappyIcon(props: React.ComponentProps<"svg">) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+      <line x1="9" y1="9" x2="9.01" y2="9" />
+      <line x1="15" y1="9" x2="15.01" y2="9" />
+    </svg>
+  );
+}
+
 function SendIcon(props: React.ComponentProps<"svg">) {
   return (
     <svg
@@ -141,7 +150,6 @@ function SendIcon(props: React.ComponentProps<"svg">) {
   );
 }
 
-// Loading icon component
 function LoadingIcon(props: React.ComponentProps<"svg">) {
   return (
     <svg

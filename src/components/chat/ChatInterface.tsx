@@ -1,129 +1,205 @@
 "use client";
 
-import { usePersistentChat } from "@/hooks/usePersistentChat";
-import { ModelRegistry } from "@/lib/constants/models";
-import React, { useLayoutEffect, useRef, useState, useCallback } from "react";
+import { Chat, StoredMessage } from "@/types/database";
+import { Message } from "ai";
+import { useChat } from "ai/react";
+import { useLiveQuery } from "dexie-react-hooks";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { db } from "@/lib/db";
 import InputArea from "./InputArea";
 import MessageList from "./MessageList";
 import ModelSelector from "./ModelSelector";
+import { ModelRegistry } from "@/lib/constants/models";
 
 interface ChatInterfaceProps {
   chatId?: string;
 }
 
 /**
- * Main chat interface component with T3-style design
- * Features responsive layout, smooth scrolling, and proper state management
+ * T3-style chat interface with proper layout and scroll behavior
+ * Features clean design, auto-scroll, and responsive mobile layout
  */
-function ChatInterface({ chatId }: ChatInterfaceProps) {
-  const [model, setModel] = useState<keyof typeof ModelRegistry>("claude-3-5-sonnet-20241022");
-  const [autoScroll, setAutoScroll] = useState(true);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+export default function ChatInterface({ chatId }: ChatInterfaceProps) {
+  const [currentModel, setCurrentModel] = useState<keyof typeof ModelRegistry>("claude-3-5-sonnet-20241022");
+  const [showScrollButton, setShowScrollButton] = useState(false);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
-  const {
-    messages,
-    input,
-    handleInputChange,
-    handleSubmit,
-    isLoading,
-    //currentChat
-  } = usePersistentChat({
-    id: chatId,
-    model,
+  // Fetch stored messages from database
+  const storedMessages = useLiveQuery(async () => {
+    if (!chatId) return [];
+    return await db.getChatMessages(chatId);
+  }, [chatId]);
+
+  // Fetch current chat
+  const currentChat = useLiveQuery(async () => {
+    if (!chatId) return null;
+    return await db.chats.get(chatId);
+  }, [chatId]) as Chat | null | undefined;
+
+  /**
+   * Transform stored messages to AI SDK format
+   */
+  const transformedMessages: Message[] = (storedMessages || []).map((msg: StoredMessage) => ({
+    id: msg.id,
+    role: msg.role as "user" | "assistant",
+    content: msg.content,
+    createdAt: msg.created_at,
+  }));
+
+  /**
+   * Handle AI responses with streaming and database storage
+   */
+  const { messages, input, handleInputChange, handleSubmit, isLoading, stop } = useChat({
+    api: "/api/chat",
+    body: { model: currentModel },
+    initialMessages: transformedMessages,
+    
+    onFinish: async (message) => {
+      try {
+        if (!chatId) return;
+
+        // Store assistant message
+        await db.addMessage({
+          chatId,
+          role: "assistant",
+          content: message.content,
+        });
+      } catch (error) {
+        console.error("Error storing assistant message:", error);
+      }
+    },
   });
 
   /**
-   * Auto-scroll to bottom when new messages arrive
-   * Uses smooth scrolling for better UX
+   * Handle message submission with database storage
    */
-  const scrollToBottom = useCallback((smooth = true) => {
-    if (messagesEndRef.current && autoScroll) {
-      messagesEndRef.current.scrollIntoView({ 
-        behavior: smooth ? "smooth" : "auto",
-        block: "end" 
-      });
-    }
-  }, [autoScroll]);
+  const onSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-  // Auto-scroll when messages change
-  useLayoutEffect(() => {
-    scrollToBottom();
-  }, [messages, scrollToBottom]);
+    if (!input.trim()) return;
+
+    try {
+      let activeChatId = chatId;
+
+      // Create new chat if none exists
+      if (!activeChatId) {
+        const newChat = await db.createChat();
+        activeChatId = newChat.id;
+        router.push(`/chat/${activeChatId}`);
+      }
+
+      // Store user message
+      await db.addMessage({
+        chatId: activeChatId,
+        role: "user",
+        content: input.trim(),
+      });
+
+      // Update chat title if needed
+      if (currentChat && !currentChat.title) {
+        const title = input.trim().slice(0, 50);
+        await db.updateChatTitle(activeChatId, title);
+      }
+
+      // Submit to AI
+      handleSubmit(e);
+    } catch (error) {
+      console.error("Error submitting message:", error);
+    }
+  }, [input, chatId, currentChat, handleSubmit, router]);
 
   /**
-   * Handle scroll events to determine if auto-scroll should be enabled
-   * Disable auto-scroll when user scrolls up, re-enable when at bottom
+   * Auto-scroll to bottom on new messages
+   */
+  useEffect(() => {
+    const scrollArea = scrollAreaRef.current;
+    if (!scrollArea) return;
+
+    const scrollToBottom = () => {
+      scrollArea.scrollTo({
+        top: scrollArea.scrollHeight,
+        behavior: "smooth",
+      });
+    };
+
+    // Small delay to ensure content is rendered
+    const timeoutId = setTimeout(scrollToBottom, 100);
+    return () => clearTimeout(timeoutId);
+  }, [messages]);
+
+  /**
+   * Handle scroll position for scroll-to-bottom button
    */
   const handleScroll = useCallback(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
+    const scrollArea = scrollAreaRef.current;
+    if (!scrollArea) return;
 
-    const { scrollTop, scrollHeight, clientHeight } = container;
-    const isAtBottom = scrollTop + clientHeight >= scrollHeight - 100; // 100px threshold
-    
-    setAutoScroll(isAtBottom);
+    const { scrollTop, scrollHeight, clientHeight } = scrollArea;
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+    setShowScrollButton(!isNearBottom && scrollHeight > clientHeight);
+  }, []);
+
+  /**
+   * Scroll to bottom manually
+   */
+  const scrollToBottom = useCallback(() => {
+    const scrollArea = scrollAreaRef.current;
+    if (!scrollArea) return;
+
+    scrollArea.scrollTo({
+      top: scrollArea.scrollHeight,
+      behavior: "smooth",
+    });
   }, []);
 
   return (
-    <div className="relative h-full w-full bg-macchiato-base" role="main" aria-label="Chat Interface">
-      {/* Messages Container - Full height with bottom padding for input overlay */}
-      <div
-        ref={scrollContainerRef}
+    <div className="relative flex h-full flex-col bg-macchiato-base">
+      {/* Chat Messages Container */}
+      <div 
+        ref={scrollAreaRef}
         onScroll={handleScroll}
-        className="h-full overflow-y-auto pb-32 scrollbar-thin scrollbar-thumb-macchiato-surface2 scrollbar-track-transparent hover:scrollbar-thumb-macchiato-overlay0"
-        style={{ 
-          scrollbarWidth: "thin",
-          scrollbarColor: "rgb(91 96 120) transparent"
-        }}
+        className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 pb-44 chat-scroll-container"
       >
-        {/* Background Pattern */}
-        <div className="absolute inset-0 bg-grid-pattern opacity-30 pointer-events-none" />
-        
-        {/* Messages */}
-        <div className="relative mx-auto w-full max-w-4xl px-4 py-8">
+        <div className="mx-auto max-w-4xl">
           <MessageList messages={messages} isLoading={isLoading} />
-          {/* Invisible element to scroll to */}
-          <div ref={messagesEndRef} className="h-1" />
         </div>
       </div>
 
       {/* Scroll to Bottom Button */}
-      {!autoScroll && (
+      {showScrollButton && (
         <button
-          onClick={() => {
-            setAutoScroll(true);
-            scrollToBottom();
-          }}
-          className="absolute right-6 bottom-40 flex h-10 w-10 items-center justify-center rounded-full bg-macchiato-surface0 shadow-lg transition-all duration-200 hover:bg-macchiato-surface1 hover:shadow-xl border border-macchiato-surface1 z-20"
+          onClick={scrollToBottom}
+          className="fixed bottom-32 right-6 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-macchiato-surface0 text-macchiato-text shadow-lg transition-all duration-200 hover:bg-macchiato-surface1 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-macchiato-mauve/50"
           aria-label="Scroll to bottom"
         >
-          <ChevronDownIcon className="h-5 w-5 text-macchiato-text" />
+          <ArrowDownIcon className="h-5 w-5" />
         </button>
       )}
 
-      {/* Input Area - Absolute overlay at bottom */}
-      <div className="absolute bottom-0 left-0 right-0 z-30 border-t border-macchiato-surface0 bg-macchiato-base/95 backdrop-blur-md shadow-lg">
-        <div className="mx-auto w-full max-w-3xl px-4 py-4">
+      {/* Input Area - Floating Overlay */}
+      <div className="absolute bottom-0 left-0 right-0 z-30 bg-macchiato-base/95 backdrop-blur-md border-t border-macchiato-surface0 px-4 sm:px-6 lg:px-8 py-4 shadow-lg">
+        <div className="mx-auto max-w-4xl space-y-3">
           <InputArea
             input={input}
             handleInputChange={handleInputChange}
-            handleSubmit={handleSubmit}
+            handleSubmit={onSubmit}
             disabled={isLoading}
           />
           
-          {/* Model Selector */}
-          <div className="mt-3 pt-3 border-t border-macchiato-surface0/50">
-            <ModelSelector currentModel={model} onModelChange={setModel} />
-          </div>
+          <ModelSelector
+            currentModel={currentModel}
+            onModelChange={setCurrentModel}
+          />
         </div>
       </div>
     </div>
   );
 }
 
-// Chevron down icon for scroll to bottom button
-function ChevronDownIcon(props: React.ComponentProps<"svg">) {
+// Arrow down icon for scroll button
+function ArrowDownIcon(props: React.ComponentProps<"svg">) {
   return (
     <svg
       {...props}
@@ -137,9 +213,8 @@ function ChevronDownIcon(props: React.ComponentProps<"svg">) {
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <path d="m6 9 6 6 6-6" />
+      <path d="M12 5v14" />
+      <path d="m19 12-7 7-7-7" />
     </svg>
   );
 }
-
-export default ChatInterface;

@@ -10,21 +10,16 @@ interface ModelSelectorProps {
 }
 
 /**
- * T3-style model selector component
- * Features clean design and intuitive model switching
+ * Clean model selector component with improved spacing and modern design
  */
 function ModelSelector({ currentModel, onModelChange }: ModelSelectorProps) {
   const modelConfig = ModelRegistry[currentModel] || ModelRegistry["claude-3-5-sonnet-20241022"];
 
   return (
     <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2 text-xs text-macchiato-subtext0">
-        <CpuIcon className="h-3.5 w-3.5" />
-        <span>Model:</span>
-      </div>
-      
+      {/* Model Selector */}
       <Dropdown>
-        <DropdownButton className="group flex items-center gap-2 rounded-lg bg-transparent px-3 py-1.5 text-xs text-macchiato-text hover:bg-macchiato-surface0/50 transition-colors">
+        <DropdownButton className="group flex items-center gap-2 rounded-lg bg-transparent px-3 py-2 text-sm text-macchiato-text hover:bg-macchiato-surface0/50 transition-colors">
           <span className="font-medium">{modelConfig.name}</span>
           <ChevronDownIcon className="h-3 w-3 text-macchiato-subtext0 transition-transform group-data-[state=open]:rotate-180" />
         </DropdownButton>
@@ -55,40 +50,29 @@ function ModelSelector({ currentModel, onModelChange }: ModelSelectorProps) {
           ))}
         </DropdownMenu>
       </Dropdown>
+
+      {/* Additional Actions */}
+      <div className="flex items-center gap-3">
+        <button
+          className="flex items-center gap-2 px-3 py-2 text-sm text-macchiato-text hover:bg-macchiato-surface0/50 rounded-lg transition-colors border border-macchiato-surface0"
+          aria-label="Search"
+        >
+          <SearchIcon className="h-4 w-4" />
+          <span>Search</span>
+        </button>
+        
+        <button
+          className="flex h-8 w-8 items-center justify-center text-macchiato-subtext0 hover:text-macchiato-text transition-colors rounded-lg hover:bg-macchiato-surface0/50"
+          aria-label="Upload"
+        >
+          <UploadIcon className="h-4 w-4" />
+        </button>
+      </div>
     </div>
   );
 }
 
-// CPU icon for model selector
-function CpuIcon(props: React.ComponentProps<"svg">) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect width="16" height="16" x="4" y="4" rx="2" />
-      <rect width="6" height="6" x="9" y="9" rx="1" />
-      <path d="M15 2v2" />
-      <path d="M15 20v2" />
-      <path d="M2 15h2" />
-      <path d="M2 9h2" />
-      <path d="M20 15h2" />
-      <path d="M20 9h2" />
-      <path d="M9 2v2" />
-      <path d="M9 20v2" />
-    </svg>
-  );
-}
-
-// Chevron down icon
+// Icon components
 function ChevronDownIcon(props: React.ComponentProps<"svg">) {
   return (
     <svg
@@ -108,7 +92,6 @@ function ChevronDownIcon(props: React.ComponentProps<"svg">) {
   );
 }
 
-// Check icon for selected model
 function CheckIcon(props: React.ComponentProps<"svg">) {
   return (
     <svg
@@ -124,6 +107,47 @@ function CheckIcon(props: React.ComponentProps<"svg">) {
       strokeLinejoin="round"
     >
       <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
+
+function SearchIcon(props: React.ComponentProps<"svg">) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.35-4.35" />
+    </svg>
+  );
+}
+
+function UploadIcon(props: React.ComponentProps<"svg">) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="17,8 12,3 7,8" />
+      <line x1="12" y1="3" x2="12" y2="15" />
     </svg>
   );
 }

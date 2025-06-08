@@ -218,6 +218,17 @@
     right: 8px;
     z-index: 10;
   }
+
+  /* Chat scroll container */
+  .chat-scroll-container {
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: rgb(91 96 120) transparent;
+  }
+
+  .chat-scroll-container:hover {
+    scrollbar-color: rgb(128 135 162) transparent;
+  }
 }
 
 @layer utilities {

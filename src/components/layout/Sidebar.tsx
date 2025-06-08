@@ -5,16 +5,16 @@ import { db } from "@/lib/db";
 import { useLiveQuery } from "dexie-react-hooks";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 
 export function Sidebar() {
   const chats = useLiveQuery(() => db.getChats(), []);
   const pathname = usePathname();
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
 
   /**
    * Formats a date to display in the chat list
-   * Uses a user-friendly format showing recent relative time
    */
   const formatDate = (date: Date) => {
     const now = new Date();
@@ -22,13 +22,6 @@ export function Sidebar() {
 
     if (diffInHours < 24) {
       return new Intl.DateTimeFormat("en-US", {
-        hour: "numeric",
-        minute: "numeric",
-        hour12: true,
-      }).format(date);
-    } else if (diffInHours < 168) { // Within a week
-      return new Intl.DateTimeFormat("en-US", {
-        weekday: "short",
         hour: "numeric",
         minute: "numeric",
         hour12: true,
@@ -42,7 +35,24 @@ export function Sidebar() {
   };
 
   /**
-   * Handles chat deletion with confirmation and navigation
+   * Groups chats by time period
+   */
+  const groupedChats = useCallback(() => {
+    if (!chats) return { today: [], older: [] };
+    
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    const todayChats = chats.filter(chat => new Date(chat.updated_at) >= today);
+    const olderChats = chats.filter(chat => new Date(chat.updated_at) < today);
+    
+    return { today: todayChats, older: olderChats };
+  }, [chats]);
+
+  const { today, older } = groupedChats();
+
+  /**
+   * Handles chat deletion
    */
   const handleDeleteChat = useCallback(
     async (e: React.MouseEvent, chatId: string) => {
@@ -51,7 +61,6 @@ export function Sidebar() {
 
       try {
         await db.deleteChat(chatId);
-        // Navigate away if we're currently viewing the deleted chat
         if (pathname === `/chat/${chatId}`) {
           router.push("/");
         }
@@ -70,94 +79,107 @@ export function Sidebar() {
     router.push(`/chat/${newChat.id}`);
   };
 
+  const renderChatItem = (chat: { id: string; title?: string; updated_at: Date }) => (
+    <Link
+      key={chat.id}
+      href={`/chat/${chat.id}`}
+      className={`group flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-all hover:bg-macchiato-surface0/70 ${
+        pathname === `/chat/${chat.id}` 
+          ? "bg-macchiato-surface0" 
+          : ""
+      }`}
+    >
+      <div className="flex-1 min-w-0">
+        <span className="line-clamp-1 block text-macchiato-text font-normal">
+          {chat.title || "New Chat"}
+        </span>
+      </div>
+      <button
+        onClick={(e) => handleDeleteChat(e, chat.id)}
+        className="opacity-0 group-hover:opacity-100 ml-2 rounded p-1 text-macchiato-subtext0 hover:text-macchiato-red transition-all duration-200"
+        aria-label={`Delete chat: ${chat.title || "New Chat"}`}
+      >
+        <TrashIcon className="h-3.5 w-3.5" />
+      </button>
+    </Link>
+  );
+
   return (
-    <div className="flex h-full w-full flex-col bg-macchiato-mantle border-r border-macchiato-surface0">
-      {/* Header Section */}
-      <div className="flex items-center px-6 py-6 border-b border-macchiato-surface0">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-macchiato-mauve to-macchiato-pink">
-            <SparklesIcon className="h-5 w-5 text-macchiato-crust" />
-          </div>
-          <h1 className="font-display text-xl font-semibold text-macchiato-text">
-            A17.chat
-          </h1>
+    <div className="flex h-full w-full flex-col bg-macchiato-mantle">
+      {/* Header */}
+      <div className="px-4 py-4">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-6 h-6 bg-macchiato-surface0 rounded"></div>
+          <h1 className="text-lg font-medium text-macchiato-text">A17.chat</h1>
+        </div>
+        
+        {/* New Chat Button */}
+        <Button 
+          onClick={handleNewChat} 
+          className="w-full justify-center gap-2 h-10 bg-macchiato-red hover:bg-macchiato-red/90 text-white border-0 font-medium rounded-lg mb-4"
+        >
+          <PlusIcon className="h-4 w-4" />
+          New Chat
+        </Button>
+
+        {/* Search Bar */}
+        <div className="relative mb-4">
+          <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-macchiato-subtext0" />
+          <input
+            type="text"
+            placeholder="Search your threads..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-macchiato-surface0 border-0 rounded-lg pl-10 pr-4 py-2 text-sm text-macchiato-text placeholder:text-macchiato-subtext0 focus:outline-none focus:ring-1 focus:ring-macchiato-surface1"
+          />
         </div>
       </div>
 
-      {/* New Chat Button */}
-      <div className="px-4 py-4">
-        <Button 
-          onClick={handleNewChat} 
-          className="w-full justify-start gap-3 h-11 bg-macchiato-surface0 hover:bg-macchiato-surface1 text-macchiato-text border-0 font-medium transition-all duration-200"
-        >
-          <PlusIcon className="h-5 w-5" />
-          New Chat
-        </Button>
-      </div>
-
-      {/* Chat List */}
-      <div className="flex-1 overflow-y-auto px-2">
-        <nav className="space-y-1" aria-label="Chat History">
-          {chats?.length === 0 ? (
-            <div className="px-4 py-8 text-center">
-              <div className="text-macchiato-subtext0 text-sm">
-                No chats yet. Start a new conversation!
-              </div>
+      {/* Chat History */}
+      <div className="flex-1 overflow-y-auto px-4">
+        {/* Today Section */}
+        {today.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-xs font-medium text-macchiato-subtext0 mb-2 px-2">Today</h3>
+            <div className="space-y-1">
+              {today.map(renderChatItem)}
             </div>
-          ) : (
-            chats?.map((chat) => (
-              <Link
-                key={chat.id}
-                href={`/chat/${chat.id}`}
-                className={`sidebar-item group flex items-center justify-between rounded-xl px-3 py-3 text-sm transition-all hover:bg-macchiato-surface0/70 ${
-                  pathname === `/chat/${chat.id}` 
-                    ? "bg-macchiato-surface0 border-l-2 border-macchiato-mauve shadow-sm" 
-                    : ""
-                }`}
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between">
-                    <span className="line-clamp-1 block font-medium text-macchiato-text leading-tight">
-                      {chat.title || "New Chat"}
-                    </span>
-                  </div>
-                  <span className="block text-xs text-macchiato-subtext0 mt-1">
-                    {formatDate(chat.updated_at)}
-                  </span>
-                </div>
-                <button
-                  onClick={(e) => handleDeleteChat(e, chat.id)}
-                  className="opacity-0 group-hover:opacity-100 ml-2 rounded-lg p-1.5 text-macchiato-subtext0 hover:bg-macchiato-surface1 hover:text-macchiato-red transition-all duration-200"
-                  aria-label={`Delete chat: ${chat.title || "New Chat"}`}
-                >
-                  <TrashIcon className="h-4 w-4" />
-                </button>
-              </Link>
-            ))
-          )}
-        </nav>
+          </div>
+        )}
+
+        {/* Older Section */}
+        {older.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-xs font-medium text-macchiato-subtext0 mb-2 px-2">Older</h3>
+            <div className="space-y-1">
+              {older.map(renderChatItem)}
+            </div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {chats?.length === 0 && (
+          <div className="text-center py-8">
+            <p className="text-macchiato-subtext0 text-sm">No conversations yet</p>
+          </div>
+        )}
       </div>
 
-
+      {/* Login Button */}
+      <div className="border-t border-macchiato-surface0 p-4">
+        <button className="flex items-center gap-2 text-sm text-macchiato-text hover:text-macchiato-mauve transition-colors">
+          <span>Login</span>
+          <ArrowRightIcon className="h-4 w-4" />
+        </button>
+      </div>
     </div>
   );
 }
 
-// Icon Components with better styling
+// Icon Components
 function TrashIcon(props: React.ComponentProps<"svg">) {
   return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 6h18" />
       <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
       <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
@@ -167,43 +189,27 @@ function TrashIcon(props: React.ComponentProps<"svg">) {
 
 function PlusIcon(props: React.ComponentProps<"svg">) {
   return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M5 12h14" />
       <path d="M12 5v14" />
     </svg>
   );
 }
 
-function SparklesIcon(props: React.ComponentProps<"svg">) {
+function SearchIcon(props: React.ComponentProps<"svg">) {
   return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
-      <path d="M20 3v4" />
-      <path d="M22 5h-4" />
-      <path d="M4 17v2" />
-      <path d="M5 18H3" />
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.35-4.35" />
+    </svg>
+  );
+}
+
+function ArrowRightIcon(props: React.ComponentProps<"svg">) {
+  return (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 12h14" />
+      <path d="m12 5 7 7-7 7" />
     </svg>
   );
 }
