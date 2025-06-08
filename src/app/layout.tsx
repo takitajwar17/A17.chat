@@ -15,8 +15,8 @@ const bricolage = Bricolage_Grotesque({
 });
 
 export const metadata = {
-  title: "A17.Chat",
-  description: "A17.Chat - A fast and simple chat application built with Next.js",
+  title: "A17.chat",
+  description: "A17.chat - A fast and simple chat application built with Next.js",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

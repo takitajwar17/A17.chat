@@ -6,7 +6,7 @@ interface ChatPageProps {
 }
 
 export const metadata: Metadata = {
-  title: "A17.Chat",
+  title: "A17.chat",
 };
 
 export default async function ChatPage({ params }: ChatPageProps) {
