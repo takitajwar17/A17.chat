@@ -5,7 +5,7 @@ import { Message } from "ai";
 import { useChat } from "ai/react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { db } from "@/lib/db";
 import InputArea from "./InputArea";
 import MessageList from "./MessageList";
@@ -51,10 +51,10 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
   /**
    * Handle AI responses with streaming and database storage
    */
-  const { messages, input, handleInputChange, handleSubmit, isLoading, stop } = useChat({
+  const { messages: sessionMessages, input, handleInputChange, handleSubmit, isLoading, stop } = useChat({
     api: "/api/chat",
     body: { model: currentModel },
-    initialMessages: transformedMessages,
+    // Don't use initialMessages to avoid duplication
     
     onFinish: async (message) => {
       try {
@@ -73,7 +73,32 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
   });
 
   /**
-   * Handle message submission with database storage
+   * Combine stored messages with current session messages
+   * Filter out duplicates by comparing content and timestamp
+   */
+  const allMessages: Message[] = useMemo(() => {
+    const stored = transformedMessages;
+    const session = sessionMessages;
+    
+    // If we have stored messages, show them
+    // If we have session messages that aren't in stored yet, append them
+    if (stored.length === 0) {
+      return session;
+    }
+    
+    // Find session messages that aren't in stored messages yet
+    const newSessionMessages = session.filter(sessionMsg => {
+      return !stored.some(storedMsg => 
+        storedMsg.content === sessionMsg.content && 
+        storedMsg.role === sessionMsg.role
+      );
+    });
+    
+    return [...stored, ...newSessionMessages];
+  }, [transformedMessages, sessionMessages]);
+
+  /**
+   * Handle message submission
    */
   const onSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -88,9 +113,10 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
         const newChat = await db.createChat();
         activeChatId = newChat.id;
         router.push(`/chat/${activeChatId}`);
+        return; // Let the new chat handle the message
       }
 
-      // Store user message
+      // Store user message before submitting to AI
       await db.addMessage({
         chatId: activeChatId,
         role: "user",
@@ -127,7 +153,7 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
     // Small delay to ensure content is rendered
     const timeoutId = setTimeout(scrollToBottom, 100);
     return () => clearTimeout(timeoutId);
-  }, [messages]);
+  }, [allMessages]);
 
   /**
    * Handle scroll position for scroll-to-bottom button
@@ -163,7 +189,7 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
         className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 pb-44 chat-scroll-container"
       >
         <div className="mx-auto max-w-4xl">
-          <MessageList messages={messages} isLoading={isLoading} />
+          <MessageList messages={allMessages} isLoading={isLoading} />
         </div>
       </div>
 
