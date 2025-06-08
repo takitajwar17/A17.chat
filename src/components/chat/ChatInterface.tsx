@@ -24,6 +24,7 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
   const [currentModel, setCurrentModel] = useState<keyof typeof ModelRegistry>("gpt-4o");
   const [showScrollButton, setShowScrollButton] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const pendingUserMessage = useRef<string | null>(null);
   const router = useRouter();
 
   // Fetch stored messages from database
@@ -58,7 +59,20 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
     
     onFinish: async (message) => {
       try {
-        if (!chatId) return;
+        if (!chatId || !pendingUserMessage.current) return;
+
+        // Store user message first
+        await db.addMessage({
+          chatId,
+          role: "user",
+          content: pendingUserMessage.current,
+        });
+        
+        // Update chat title if needed
+        if (currentChat && !currentChat.title) {
+          const title = pendingUserMessage.current.slice(0, 50);
+          await db.updateChatTitle(chatId, title);
+        }
 
         // Store assistant message
         await db.addMessage({
@@ -66,8 +80,11 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
           role: "assistant",
           content: message.content,
         });
+
+        // Clear the pending message
+        pendingUserMessage.current = null;
       } catch (error) {
-        console.error("Error storing assistant message:", error);
+        console.error("Error storing messages:", error);
       }
     },
   });
@@ -116,25 +133,15 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
         return; // Let the new chat handle the message
       }
 
-      // Store user message before submitting to AI
-      await db.addMessage({
-        chatId: activeChatId,
-        role: "user",
-        content: input.trim(),
-      });
+      // Store the current input to save later in onFinish
+      pendingUserMessage.current = input.trim();
 
-      // Update chat title if needed
-      if (currentChat && !currentChat.title) {
-        const title = input.trim().slice(0, 50);
-        await db.updateChatTitle(activeChatId, title);
-      }
-
-      // Submit to AI
+      // Just submit to AI
       handleSubmit(e);
     } catch (error) {
       console.error("Error submitting message:", error);
     }
-  }, [input, chatId, currentChat, handleSubmit, router]);
+  }, [input, chatId, handleSubmit, router]);
 
   /**
    * Auto-scroll to bottom on new messages
