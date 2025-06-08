@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default async function ChatPage({ params }: ChatPageProps) {
   const { id } = await params;
   return (
-    <div className="flex-1">
+    <div className="flex-1 h-full">
       <ChatInterface chatId={id} />
     </div>
   );

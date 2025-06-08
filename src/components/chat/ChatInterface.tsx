@@ -173,7 +173,7 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
       <div 
         ref={scrollAreaRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 pb-52 chat-scroll-container"
+        className="flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 lg:px-8 pb-52 chat-scroll-container"
       >
         <div className="mx-auto max-w-4xl">
           <MessageList messages={allMessages} isLoading={isLoading} />
@@ -192,8 +192,8 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
       )}
 
       {/* Input Area - Floating Overlay */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 flex justify-center px-4 sm:px-6 lg:px-8 pb-6 pointer-events-none">
-        <div className="w-full max-w-3xl pointer-events-auto">
+      <div className="fixed bottom-0 left-0 right-0 z-30 flex justify-center px-4 sm:px-6 lg:px-8 lg:left-72">
+        <div className="w-full max-w-3xl">
           {/* Floating Card Container */}
           <div className="bg-macchiato-base/95 backdrop-blur-xl border border-macchiato-surface0/50 rounded-2xl shadow-2xl shadow-black/20 p-4 space-y-3">
             <InputArea

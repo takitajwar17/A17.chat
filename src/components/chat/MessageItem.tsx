@@ -36,13 +36,13 @@ const MessageItem = memo(function MessageItem({
 
   return (
     <div className={`flex w-full ${role === "user" ? "justify-end" : "justify-start"} message-fade-in`}>
-      <div className="flex max-w-[85%] flex-col gap-2">
+      <div className={`flex ${role === "user" ? "max-w-[85%]" : "w-full"} flex-col gap-2`}>
         {/* Message Content */}
         <div
-          className={`message-bubble relative ${
+          className={`relative ${
             role === "user" 
-              ? "message-user shadow-lg shadow-macchiato-mauve/20" 
-              : "message-assistant shadow-md shadow-macchiato-surface0/30"
+              ? "message-bubble message-user shadow-lg shadow-macchiato-mauve/20" 
+              : "text-macchiato-text"
           } ${isLoading ? "message-typing" : ""}`}
         >
           {role === "assistant" ? (
