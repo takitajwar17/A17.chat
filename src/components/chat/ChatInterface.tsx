@@ -173,9 +173,9 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
       <div 
         ref={scrollAreaRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 lg:px-8 pb-52 chat-scroll-container"
+        className="flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 lg:px-8 pt-8 pb-52 chat-scroll-container"
       >
-        <div className="mx-auto max-w-4xl">
+        <div className="w-full max-w-3xl mx-auto">
           <MessageList messages={allMessages} isLoading={isLoading} />
         </div>
       </div>
@@ -192,10 +192,12 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
       )}
 
       {/* Input Area - Floating Overlay */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 flex justify-center px-4 sm:px-6 lg:px-8 lg:left-72">
-        <div className="w-full max-w-3xl">
-          {/* Floating Card Container */}
-          <div className="bg-macchiato-base/95 backdrop-blur-xl border border-macchiato-surface0/50 rounded-2xl shadow-2xl shadow-black/20 p-4 space-y-3">
+      <div className="fixed bottom-0 left-0 right-0 z-30 px-4 sm:px-6 lg:px-8 lg:left-72">
+        <div className="w-full max-w-3xl mx-auto">
+          {/* Outer Padding Container */}
+          <div className="bg-macchiato-surface0/60 backdrop-blur-xl rounded-t-2xl pt-2 px-2">
+            {/* Floating Card Container */}
+            <div className="bg-macchiato-surface0/90 backdrop-blur-xl border border-macchiato-surface0/50 rounded-t-xl shadow-2xl shadow-black/20 p-4 space-y-3">
             <InputArea
               input={input}
               handleInputChange={handleInputChange}
@@ -207,6 +209,7 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
               currentModel={currentModel}
               onModelChange={setCurrentModel}
             />
+            </div>
           </div>
         </div>
       </div>

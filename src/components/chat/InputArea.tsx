@@ -77,7 +77,8 @@ function InputArea({ input, handleInputChange, handleSubmit, disabled }: InputAr
           placeholder="Type your message here..."
           disabled={disabled}
           rows={1}
-          className="flex-1 resize-none bg-transparent text-macchiato-text placeholder:text-macchiato-subtext0 focus:outline-none disabled:opacity-50 text-sm leading-relaxed min-h-[20px] max-h-[176px] overflow-y-auto"
+          className="flex-1 resize-none bg-transparent text-macchiato-text placeholder:text-macchiato-subtext0 focus:outline-none focus:ring-0 focus:border-transparent disabled:opacity-50 text-sm leading-relaxed min-h-[20px] max-h-[176px] overflow-y-auto"
+          style={{ outline: 'none', boxShadow: 'none' }}
         />
 
         {/* Icon Group - Speech Bubble Style */}
