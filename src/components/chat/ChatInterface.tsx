@@ -55,7 +55,7 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
   const { messages: sessionMessages, input, handleInputChange, handleSubmit, isLoading, stop } = useChat({
     api: "/api/chat",
     body: { model: currentModel },
-    // Don't use initialMessages to avoid duplication
+    initialMessages: transformedMessages,
     
     onFinish: async (message) => {
       try {
@@ -90,29 +90,9 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
   });
 
   /**
-   * Combine stored messages with current session messages
-   * Filter out duplicates by comparing content and timestamp
+   * Use session messages directly since they include initialMessages + streaming updates
    */
-  const allMessages: Message[] = useMemo(() => {
-    const stored = transformedMessages;
-    const session = sessionMessages;
-    
-    // If we have stored messages, show them
-    // If we have session messages that aren't in stored yet, append them
-    if (stored.length === 0) {
-      return session;
-    }
-    
-    // Find session messages that aren't in stored messages yet
-    const newSessionMessages = session.filter(sessionMsg => {
-      return !stored.some(storedMsg => 
-        storedMsg.content === sessionMsg.content && 
-        storedMsg.role === sessionMsg.role
-      );
-    });
-    
-    return [...stored, ...newSessionMessages];
-  }, [transformedMessages, sessionMessages]);
+  const allMessages: Message[] = sessionMessages;
 
   /**
    * Handle message submission
@@ -193,7 +173,7 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
       <div 
         ref={scrollAreaRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 pb-44 chat-scroll-container"
+        className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 pb-52 chat-scroll-container"
       >
         <div className="mx-auto max-w-4xl">
           <MessageList messages={allMessages} isLoading={isLoading} />
@@ -212,19 +192,22 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
       )}
 
       {/* Input Area - Floating Overlay */}
-      <div className="absolute bottom-0 left-0 right-0 z-30 bg-macchiato-base/95 backdrop-blur-md border-t border-macchiato-surface0 px-4 sm:px-6 lg:px-8 py-4 shadow-lg">
-        <div className="mx-auto max-w-4xl space-y-3">
-          <InputArea
-            input={input}
-            handleInputChange={handleInputChange}
-            handleSubmit={onSubmit}
-            disabled={isLoading}
-          />
-          
-          <ModelSelector
-            currentModel={currentModel}
-            onModelChange={setCurrentModel}
-          />
+      <div className="fixed bottom-0 left-0 right-0 z-30 flex justify-center px-4 sm:px-6 lg:px-8 pb-6 pointer-events-none">
+        <div className="w-full max-w-3xl pointer-events-auto">
+          {/* Floating Card Container */}
+          <div className="bg-macchiato-base/95 backdrop-blur-xl border border-macchiato-surface0/50 rounded-2xl shadow-2xl shadow-black/20 p-4 space-y-3">
+            <InputArea
+              input={input}
+              handleInputChange={handleInputChange}
+              handleSubmit={onSubmit}
+              disabled={isLoading}
+            />
+            
+            <ModelSelector
+              currentModel={currentModel}
+              onModelChange={setCurrentModel}
+            />
+          </div>
         </div>
       </div>
     </div>
