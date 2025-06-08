@@ -21,7 +21,7 @@ interface ChatInterfaceProps {
  * Features clean design, auto-scroll, and responsive mobile layout
  */
 export default function ChatInterface({ chatId }: ChatInterfaceProps) {
-  const [currentModel, setCurrentModel] = useState<keyof typeof ModelRegistry>("claude-3-5-sonnet-20241022");
+  const [currentModel, setCurrentModel] = useState<keyof typeof ModelRegistry>("gpt-4o");
   const [showScrollButton, setShowScrollButton] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const router = useRouter();

@@ -13,7 +13,7 @@ interface ModelSelectorProps {
  * Clean model selector component with improved spacing and modern design
  */
 function ModelSelector({ currentModel, onModelChange }: ModelSelectorProps) {
-  const modelConfig = ModelRegistry[currentModel] || ModelRegistry["claude-3-5-sonnet-20241022"];
+  const modelConfig = ModelRegistry[currentModel] || ModelRegistry["gpt-4o"];
 
   return (
     <div className="flex items-center justify-between">
