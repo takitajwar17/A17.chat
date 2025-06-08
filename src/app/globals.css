@@ -1,0 +1,263 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* T3 Chat Global Styles */
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-macchiato-base text-macchiato-text;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Smooth scrolling for the entire page */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Custom scrollbar styles for webkit browsers */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-macchiato-surface2 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-macchiato-overlay0;
+  }
+
+  /* Focus outline styles */
+  :focus-visible {
+    @apply outline-none ring-2 ring-macchiato-mauve ring-offset-2 ring-offset-macchiato-base;
+  }
+
+  /* Fix text selection for code blocks */
+  code, pre {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+  }
+
+  /* Prevent unwanted text selection styling */
+  ::selection {
+    background-color: rgb(198 160 246 / 0.3);
+    color: inherit;
+  }
+
+  ::-moz-selection {
+    background-color: rgb(198 160 246 / 0.3);
+    color: inherit;
+  }
+}
+
+@layer components {
+  /* T3 Chat message animations */
+  .message-fade-in {
+    animation: fadeInUp 0.3s ease-out forwards;
+  }
+
+  .message-typing {
+    @apply opacity-70;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  /* T3 style input focus */
+  .chat-input-focus {
+    @apply ring-2 ring-macchiato-mauve/50 border-macchiato-mauve/50;
+    box-shadow: 0 0 0 1px rgb(198 160 246 / 0.1);
+  }
+
+  /* T3 message bubble styles */
+  .message-bubble {
+    @apply rounded-2xl px-4 py-3 max-w-[85%] break-words;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .message-user {
+    @apply bg-macchiato-mauve text-macchiato-crust ml-auto;
+  }
+
+  .message-assistant {
+    @apply bg-macchiato-surface0 text-macchiato-text mr-auto;
+  }
+
+  /* T3 sidebar hover effects */
+  .sidebar-item {
+    @apply transition-all duration-200 ease-in-out;
+  }
+
+  .sidebar-item:hover {
+    @apply bg-macchiato-surface0/70 transform translate-x-1;
+  }
+
+  /* Loading shimmer effect */
+  .loading-shimmer {
+    background: linear-gradient(
+      90deg,
+      rgb(54 58 79 / 0.2) 25%,
+      rgb(54 58 79 / 0.4) 50%,
+      rgb(54 58 79 / 0.2) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  /* Prose styling for markdown content in messages */
+  .prose {
+    color: rgb(202 211 245);
+    max-width: none;
+  }
+
+  .prose p {
+    @apply mb-4 last:mb-0;
+    line-height: 1.6;
+  }
+
+  .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+    @apply text-macchiato-text font-semibold mb-3 mt-6 first:mt-0;
+  }
+
+  .prose h1 { @apply text-xl; }
+  .prose h2 { @apply text-lg; }
+  .prose h3 { @apply text-base; }
+
+  .prose ul, .prose ol {
+    @apply mb-4 pl-6;
+  }
+
+  .prose li {
+    @apply mb-1;
+  }
+
+  .prose blockquote {
+    @apply border-l-4 border-macchiato-surface2 pl-4 italic text-macchiato-subtext1 my-4;
+  }
+
+  /* Fix inline code styling - remove selection appearance */
+  .prose code {
+    @apply bg-macchiato-surface1 text-macchiato-text px-1.5 py-0.5 rounded text-sm font-mono;
+    background-color: rgb(73 77 100) !important;
+    color: rgb(202 211 245) !important;
+    border: none;
+    outline: none;
+    box-shadow: none;
+  }
+
+  /* Fix pre code blocks */
+  .prose pre {
+    @apply bg-macchiato-surface1 rounded-lg overflow-x-auto my-4;
+    background-color: rgb(73 77 100) !important;
+  }
+
+  .prose pre code {
+    @apply bg-transparent p-0 text-sm;
+    background: transparent !important;
+    color: inherit !important;
+    border: none;
+    outline: none;
+    box-shadow: none;
+  }
+
+  .prose a {
+    @apply text-macchiato-mauve hover:text-macchiato-pink underline;
+  }
+
+  .prose strong {
+    @apply font-semibold text-macchiato-text;
+  }
+
+  .prose em {
+    @apply italic;
+  }
+
+  /* Markdown block elements */
+  .markdown-block {
+    @apply mb-4 last:mb-0;
+  }
+
+  .markdown-block p {
+    @apply m-0;
+  }
+
+  /* Syntax highlighter overrides */
+  .prose pre[class*="language-"] {
+    background: rgb(73 77 100) !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  .prose code[class*="language-"] {
+    background: transparent !important;
+    color: inherit !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Fix copy button positioning */
+  .prose .group {
+    position: relative;
+  }
+
+  .prose .group button {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 10;
+  }
+}
+
+@layer utilities {
+  /* Custom animations */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 0.7;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  /* Utility classes */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .bg-grid-pattern {
+    background-image: radial-gradient(circle at 1px 1px, rgb(54 58 79 / 0.15) 1px, transparent 0);
+    background-size: 20px 20px;
+  }
+}
