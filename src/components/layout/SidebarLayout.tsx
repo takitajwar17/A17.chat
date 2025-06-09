@@ -47,8 +47,7 @@ export function SidebarLayout({ sidebar, navbar, children }: SidebarLayoutProps)
             <MenuIcon className="h-5 w-5" />
           </button>
           
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-macchiato-surface0 rounded"></div>
+          <div className="flex items-center">
             <h1 className="text-lg font-brand font-medium text-macchiato-text">A17.chat</h1>
           </div>
         </div>
