@@ -7,6 +7,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { db } from "@/lib/db";
+import { useSidebarContext } from "@/components/layout/SidebarLayout";
 import InputArea from "./InputArea";
 import MessageList from "./MessageList";
 import ModelSelector from "./ModelSelector";
@@ -26,6 +27,9 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const pendingUserMessage = useRef<string | null>(null);
   const router = useRouter();
+  
+  // Get sidebar collapse state for proper positioning
+  const { isCollapsed } = useSidebarContext();
 
   // Fetch stored messages from database
   const storedMessages = useLiveQuery(async () => {
@@ -180,19 +184,27 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
         </div>
       </div>
 
-      {/* Scroll to Bottom Button */}
+      {/* Scroll to Bottom Button - Centered relative to chat interface */}
       {showScrollButton && (
-        <button
-          onClick={scrollToBottom}
-          className="fixed bottom-32 right-6 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-macchiato-surface0 text-macchiato-text shadow-lg transition-all duration-200 hover:bg-macchiato-surface1 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-macchiato-mauve/50"
-          aria-label="Scroll to bottom"
-        >
-          <ArrowDownIcon className="h-5 w-5" />
-        </button>
+        <div className={`fixed bottom-44 left-1/2 transform -translate-x-1/2 z-20 px-4 sm:px-6 lg:px-8 ${
+          isCollapsed ? 'lg:left-1/2' : 'lg:left-[calc(50%+144px)]'
+        }`}>
+          <div className="w-full max-w-2xl mx-auto flex justify-center">
+            <button
+              onClick={scrollToBottom}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-macchiato-surface0/70 backdrop-blur-md border border-macchiato-surface1/30 text-macchiato-text shadow-lg transition-all duration-200 hover:bg-macchiato-surface1/80 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-macchiato-mauve/50"
+              aria-label="Scroll to bottom"
+            >
+              <ArrowDownIcon className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Input Area - Floating Overlay */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 px-4 sm:px-6 lg:px-8 lg:left-72">
+      <div className={`fixed bottom-0 left-0 right-0 z-30 px-4 sm:px-6 lg:px-8 ${
+        isCollapsed ? 'lg:left-0' : 'lg:left-72'
+      }`}>
         <div className="w-full max-w-3xl mx-auto">
           {/* Outer Padding Container */}
           <div className="bg-macchiato-surface0/60 backdrop-blur-xl rounded-t-2xl pt-2 px-2">
