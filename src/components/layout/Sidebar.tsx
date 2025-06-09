@@ -117,7 +117,7 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
         <div className={`flex items-center mb-4 ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
           {!isCollapsed && (
             <div className="flex items-center flex-1 justify-center">
-              <h1 className="text-lg font-medium text-macchiato-text">A17.chat</h1>
+              <h1 className="text-lg font-brand font-medium text-macchiato-text">A17.chat</h1>
             </div>
           )}
           

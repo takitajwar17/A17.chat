@@ -49,7 +49,7 @@ export function SidebarLayout({ sidebar, navbar, children }: SidebarLayoutProps)
           
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 bg-macchiato-surface0 rounded"></div>
-            <h1 className="text-lg font-medium text-macchiato-text">A17.chat</h1>
+            <h1 className="text-lg font-brand font-medium text-macchiato-text">A17.chat</h1>
           </div>
         </div>
 
