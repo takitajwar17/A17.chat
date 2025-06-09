@@ -2,7 +2,7 @@
 
 import { Dropdown, DropdownButton, DropdownItem, DropdownMenu } from "@/components/ui/dropdown";
 import { ModelRegistry } from "@/lib/constants/models";
-import React from "react";
+import React, { useState, useRef } from "react";
 
 interface ModelSelectorProps {
   currentModel: keyof typeof ModelRegistry;
@@ -14,9 +14,42 @@ interface ModelSelectorProps {
  */
 function ModelSelector({ currentModel, onModelChange }: ModelSelectorProps) {
   const modelConfig = ModelRegistry[currentModel] || ModelRegistry["gpt-4o"];
+  
+  // State for search toggle
+  const [isSearchActive, setIsSearchActive] = useState(false);
+  
+  // Ref for file input
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSearchToggle = () => {
+    setIsSearchActive(!isSearchActive);
+  };
+
+  const handleFileUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      // Handle file upload logic here
+      console.log('Selected files:', Array.from(files));
+      // You can add your file processing logic here
+    }
+  };
 
   return (
     <div className="flex items-center gap-2">
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        accept="image/*,text/*,.pdf,.doc,.docx"
+        onChange={handleFileChange}
+        className="hidden"
+      />
+
       {/* Model Selector */}
       <Dropdown>
         <DropdownButton className="group flex items-center gap-2 rounded-lg bg-transparent px-3 py-2 text-sm text-macchiato-text hover:bg-macchiato-surface0/50 transition-colors">
@@ -53,16 +86,23 @@ function ModelSelector({ currentModel, onModelChange }: ModelSelectorProps) {
 
       {/* Search and Upload Buttons - Compact, right beside model selector */}
       <button
-        className="flex items-center gap-1.5 px-2 py-1.5 text-xs text-macchiato-text hover:bg-macchiato-surface0/50 rounded-lg transition-colors border border-macchiato-surface0"
+        onClick={handleSearchToggle}
+        className={`flex items-center gap-1.5 px-2 h-7 text-xs rounded-lg transition-colors border-2 ${
+          isSearchActive 
+            ? "bg-macchiato-mauve/20 text-macchiato-mauve border-macchiato-mauve/50" 
+            : "text-macchiato-text hover:bg-macchiato-surface0/50 border-macchiato-surface0"
+        }`}
         aria-label="Search"
+        aria-pressed={isSearchActive}
       >
         <GlobeIcon className="h-3.5 w-3.5" />
         <span>Search</span>
       </button>
       
       <button
-        className="flex h-7 w-7 items-center justify-center text-macchiato-subtext0 hover:text-macchiato-text transition-colors rounded-lg hover:bg-macchiato-surface0/50 border border-macchiato-surface0"
-        aria-label="Upload"
+        onClick={handleFileUpload}
+        className="flex h-7 w-7 items-center justify-center transition-colors rounded-lg border-2 text-macchiato-subtext0 hover:text-macchiato-text hover:bg-macchiato-surface0/50 border-macchiato-surface0"
+        aria-label="Upload file"
       >
         <ClipIcon className="h-3.5 w-3.5" />
       </button>
