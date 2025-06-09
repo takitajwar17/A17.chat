@@ -24,6 +24,7 @@ interface ChatInterfaceProps {
 export default function ChatInterface({ chatId }: ChatInterfaceProps) {
   const [currentModel, setCurrentModel] = useState<keyof typeof ModelRegistry>("gpt-4o");
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [isAwaitingResponse, setIsAwaitingResponse] = useState(false); // Track gap between send and streaming
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const pendingUserMessage = useRef<string | null>(null);
   const router = useRouter();
@@ -81,6 +82,9 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
     
     onFinish: async (message) => {
       try {
+        console.log("[Chat] AI response streaming finished");
+        setIsAwaitingResponse(false); // Ensure loading state is cleared
+        
         if (!chatId || !pendingUserMessage.current) return;
 
         // Store user message first
@@ -107,6 +111,7 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
         pendingUserMessage.current = null;
       } catch (error) {
         console.error("Error storing messages:", error);
+        setIsAwaitingResponse(false); // Ensure loading state is cleared even on error
       }
     },
   });
@@ -135,6 +140,22 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
   const allMessages: Message[] = sessionMessages;
 
   /**
+   * Detect when AI starts streaming (first content arrives)
+   * This helps us hide the loading indicator as soon as streaming begins
+   */
+  useEffect(() => {
+    if (sessionMessages.length > 0) {
+      const lastMessage = sessionMessages[sessionMessages.length - 1];
+      
+      // If the last message is from assistant and has content, streaming has started
+      if (lastMessage.role === "assistant" && lastMessage.content.trim().length > 0 && isAwaitingResponse) {
+        console.log("[Chat] AI response streaming detected - hiding loading indicator");
+        setIsAwaitingResponse(false);
+      }
+    }
+  }, [sessionMessages, isAwaitingResponse]);
+
+  /**
    * Handle message submission
    */
   const onSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
@@ -159,11 +180,16 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
 
       // Store the current input to save later in onFinish
       pendingUserMessage.current = input.trim();
+      
+      // Set awaiting response state to show loading during the gap
+      console.log("[Chat] Message submitted - showing gap loading indicator");
+      setIsAwaitingResponse(true);
 
       // Submit to AI for existing chat
       handleSubmit(e);
     } catch (error) {
       console.error("Error submitting message:", error);
+      setIsAwaitingResponse(false); // Clear loading state on error
     }
   }, [input, chatId, handleSubmit, router]);
 
@@ -220,7 +246,11 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
         className="flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 lg:px-8 pt-4 pb-52 chat-scroll-container"
       >
         <div className="w-full max-w-2xl mx-auto">
-          <MessageList messages={allMessages} isLoading={isLoading} />
+          <MessageList 
+            messages={allMessages} 
+            isLoading={isLoading} 
+            isAwaitingResponse={isAwaitingResponse}
+          />
         </div>
       </div>
 
@@ -254,7 +284,7 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
               input={input}
               handleInputChange={handleInputChange}
               handleSubmit={onSubmit}
-              disabled={isLoading}
+              disabled={isLoading || isAwaitingResponse}
             />
             
             <ModelSelector

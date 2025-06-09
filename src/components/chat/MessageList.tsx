@@ -6,13 +6,14 @@ import MessageItem from "./MessageItem";
 interface MessageListProps {
   messages: Message[];
   isLoading?: boolean;
+  isAwaitingResponse?: boolean;
 }
 
 /**
  * Message list container with minimal T3-style layout and compact spacing
  * Handles the display of all chat messages with proper formatting
  */
-const MessageList = memo(function MessageList({ messages, isLoading }: MessageListProps) {
+const MessageList = memo(function MessageList({ messages, isLoading, isAwaitingResponse }: MessageListProps) {
   
   // Show welcome message if no messages exist
   if (messages.length === 0) {
@@ -50,18 +51,29 @@ const MessageList = memo(function MessageList({ messages, isLoading }: MessageLi
 
   return (
     <div className="flex flex-col space-y-6 py-4">
-      {messages.map((message, index) => (
-        <MessageItem
-          key={message.id || index}
-          role={message.role as "user" | "assistant"}
-          content={message.content}
-          timestamp={message.createdAt ? new Date(message.createdAt) : new Date()}
-          isLoading={isLoading && index === messages.length - 1 && message.role === "assistant"}
-        />
-      ))}
+      {messages.map((message, index) => {
+        const isLastMessage = index === messages.length - 1;
+        const isAssistantMessage = message.role === "assistant";
+        const hasContent = message.content.trim().length > 0;
+        
+        // Show loading dots only for assistant messages that are actively being generated
+        // but haven't started streaming content yet (empty content)
+        // Once content starts arriving, hide the loading indicator
+        const shouldShowLoading = (isLoading || isAwaitingResponse) && isLastMessage && isAssistantMessage && !hasContent;
+        
+        return (
+          <MessageItem
+            key={message.id || index}
+            role={message.role as "user" | "assistant"}
+            content={message.content}
+            timestamp={message.createdAt ? new Date(message.createdAt) : new Date()}
+            isLoading={shouldShowLoading}
+          />
+        );
+      })}
       
-      {/* Loading indicator for new assistant messages */}
-      {isLoading && messages[messages.length - 1]?.role === "user" && (
+      {/* Loading indicator for new assistant messages (gap between send and streaming starts) */}
+      {(isLoading || isAwaitingResponse) && messages[messages.length - 1]?.role === "user" && (
         <MessageItem
           role="assistant"
           content=""
