@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, createContext, useContext } from "react";
+import Link from "next/link";
 
 type SidebarLayoutProps = {
   sidebar: React.ReactNode;
@@ -75,7 +76,12 @@ export function SidebarLayout({ sidebar, navbar, children }: SidebarLayoutProps)
             </button>
             
             <div className="flex items-center">
-              <h1 className="text-lg font-brand font-medium text-macchiato-text">A17.chat</h1>
+              <Link 
+                href="/"
+                className="text-lg font-brand font-medium text-macchiato-text hover:text-macchiato-mauve transition-colors"
+              >
+                A17.chat
+              </Link>
             </div>
           </div>
 

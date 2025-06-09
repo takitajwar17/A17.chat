@@ -145,7 +145,12 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
         {/* Title and Collapse Button */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center flex-1 justify-center">
-            <h1 className="text-lg font-brand font-medium text-macchiato-text">A17.chat</h1>
+            <Link 
+              href="/"
+              className="text-lg font-brand font-medium text-macchiato-text hover:text-macchiato-mauve transition-colors"
+            >
+              A17.chat
+            </Link>
           </div>
           
           {/* Collapse Toggle Button */}
