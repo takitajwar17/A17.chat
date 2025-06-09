@@ -18,7 +18,7 @@ export function SidebarLayout({ sidebar, navbar, children }: SidebarLayoutProps)
   return (
     <div className="relative flex h-screen bg-macchiato-base overflow-hidden">
       {/* Desktop Sidebar */}
-      <nav className="hidden lg:flex w-72 flex-shrink-0 border-r border-macchiato-surface0">
+      <nav className="hidden lg:flex flex-shrink-0 border-r border-macchiato-surface0">
         {sidebar}
       </nav>
 

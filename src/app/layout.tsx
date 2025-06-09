@@ -1,5 +1,5 @@
 import { Navbar } from "@/components/layout/Navbar";
-import { Sidebar } from "@/components/layout/Sidebar";
+import { SidebarWrapper } from "@/components/layout/SidebarWrapper";
 import { SidebarLayout } from "@/components/layout/SidebarLayout";
 import { Bricolage_Grotesque, Inter } from "next/font/google";
 import "./globals.css";
@@ -23,7 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${inter.variable} ${bricolage.variable}`}>
       <body className="font-sans antialiased">
-        <SidebarLayout sidebar={<Sidebar />} navbar={<Navbar />}>
+        <SidebarLayout sidebar={<SidebarWrapper />} navbar={<Navbar />}>
           {children}
         </SidebarLayout>
       </body>
