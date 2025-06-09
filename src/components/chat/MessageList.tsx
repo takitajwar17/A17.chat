@@ -2,14 +2,16 @@
 import { Message } from "ai";
 import { memo } from "react";
 import MessageItem from "./MessageItem";
+import { StoredMessage } from "@/types/database";
 import { ModelRegistry } from "@/lib/constants/models";
 
 interface MessageListProps {
   messages: Message[];
+  storedMessages?: StoredMessage[]; // Add stored messages to get model info
   isLoading?: boolean;
   isAwaitingResponse?: boolean;
   chatId?: string; // Add chatId for branching support
-  currentModel?: string; // Add current model for assistant message display
+  currentModel?: string; // Add current model for fallback
 }
 
 /**
@@ -18,6 +20,7 @@ interface MessageListProps {
  */
 const MessageList = memo(function MessageList({ 
   messages, 
+  storedMessages, 
   isLoading, 
   isAwaitingResponse,
   chatId,
@@ -75,6 +78,23 @@ const MessageList = memo(function MessageList({
         // Once content starts arriving, hide the loading indicator
         const shouldShowLoading = (isLoading || isAwaitingResponse) && isLastMessage && isAssistantMessage && !hasContent;
         
+        // Get the stored message to retrieve model information
+        const storedMessage = storedMessages?.find(sm => sm.id === message.id);
+        
+        // For stored messages: use the stored model, or fallback to undefined if no model was stored
+        // For new/loading messages: use currentModel
+        let messageModel: string | undefined;
+        if (storedMessage) {
+          // This is a stored message - only use the stored model, don't fallback to currentModel
+          messageModel = storedMessage.model;
+        } else if (isAssistantMessage && shouldShowLoading) {
+          // This is a new message being generated - use currentModel
+          messageModel = currentModel;
+        } else {
+          // This is a session message that hasn't been stored yet - use currentModel
+          messageModel = isAssistantMessage ? currentModel : undefined;
+        }
+        
         return (
           <MessageItem
             key={message.id || index}
@@ -84,7 +104,7 @@ const MessageList = memo(function MessageList({
             isLoading={shouldShowLoading}
             chatId={chatId}
             messageIndex={index}
-            currentModel={currentModel}
+            currentModel={messageModel}
           />
         );
       })}

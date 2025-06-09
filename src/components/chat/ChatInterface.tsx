@@ -105,6 +105,7 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
           chatId,
           role: "assistant",
           content: message.content,
+          model: currentModel,
         });
 
         // Clear the pending message
@@ -248,6 +249,7 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
         <div className="w-full max-w-2xl mx-auto">
           <MessageList 
             messages={allMessages} 
+            storedMessages={storedMessages}
             isLoading={isLoading}
             isAwaitingResponse={isAwaitingResponse}
             chatId={chatId}

@@ -8,7 +8,7 @@ class ChatDatabase extends Dexie {
 
   constructor() {
     super("ChatDatabase");
-    this.version(2).stores({
+    this.version(3).stores({
       chats: "id, created_at, updated_at, branchedFromChatId",
       messages: "id, chatId, created_at",
     });
@@ -155,6 +155,7 @@ class ChatDatabase extends Dexie {
             role: originalMessage.role,
             created_at: originalMessage.created_at, // Keep original timestamp to preserve order
             isPartial: originalMessage.isPartial,
+            model: originalMessage.model, // Preserve the model information
           };
           
           newMessages.push(newMessage);

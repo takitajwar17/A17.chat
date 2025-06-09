@@ -13,4 +13,5 @@ export interface StoredMessage {
   role: "user" | "assistant";
   created_at: Date;
   isPartial?: boolean;
+  model?: string;
 }

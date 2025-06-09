@@ -13,7 +13,7 @@ interface MessageItemProps {
   timestamp?: Date;
   chatId?: string;
   messageIndex?: number;
-  currentModel?: string;
+  currentModel?: string; // The model that was used for this specific message
 }
 
 /**
