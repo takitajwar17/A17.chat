@@ -173,9 +173,9 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
       <div 
         ref={scrollAreaRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 lg:px-8 pt-8 pb-52 chat-scroll-container"
+        className="flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 lg:px-8 pt-4 pb-52 chat-scroll-container"
       >
-        <div className="w-full max-w-3xl mx-auto">
+        <div className="w-full max-w-2xl mx-auto">
           <MessageList messages={allMessages} isLoading={isLoading} />
         </div>
       </div>

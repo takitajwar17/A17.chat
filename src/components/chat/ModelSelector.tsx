@@ -10,13 +10,13 @@ interface ModelSelectorProps {
 }
 
 /**
- * Clean model selector component with improved spacing and modern design
+ * Clean model selector component with search and upload buttons beside the model
  */
 function ModelSelector({ currentModel, onModelChange }: ModelSelectorProps) {
   const modelConfig = ModelRegistry[currentModel] || ModelRegistry["gpt-4o"];
 
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center gap-2">
       {/* Model Selector */}
       <Dropdown>
         <DropdownButton className="group flex items-center gap-2 rounded-lg bg-transparent px-3 py-2 text-sm text-macchiato-text hover:bg-macchiato-surface0/50 transition-colors">
@@ -51,23 +51,21 @@ function ModelSelector({ currentModel, onModelChange }: ModelSelectorProps) {
         </DropdownMenu>
       </Dropdown>
 
-      {/* Additional Actions */}
-      <div className="flex items-center gap-3">
-        <button
-          className="flex items-center gap-2 px-3 py-2 text-sm text-macchiato-text hover:bg-macchiato-surface0/50 rounded-lg transition-colors border border-macchiato-surface0"
-          aria-label="Search"
-        >
-          <SearchIcon className="h-4 w-4" />
-          <span>Search</span>
-        </button>
-        
-        <button
-          className="flex h-8 w-8 items-center justify-center text-macchiato-subtext0 hover:text-macchiato-text transition-colors rounded-lg hover:bg-macchiato-surface0/50"
-          aria-label="Upload"
-        >
-          <UploadIcon className="h-4 w-4" />
-        </button>
-      </div>
+      {/* Search and Upload Buttons - Compact, right beside model selector */}
+      <button
+        className="flex items-center gap-1.5 px-2 py-1.5 text-xs text-macchiato-text hover:bg-macchiato-surface0/50 rounded-lg transition-colors border border-macchiato-surface0"
+        aria-label="Search"
+      >
+        <SearchIcon className="h-3.5 w-3.5" />
+        <span>Search</span>
+      </button>
+      
+      <button
+        className="flex h-7 w-7 items-center justify-center text-macchiato-subtext0 hover:text-macchiato-text transition-colors rounded-lg hover:bg-macchiato-surface0/50 border border-macchiato-surface0"
+        aria-label="Upload"
+      >
+        <UploadIcon className="h-3.5 w-3.5" />
+      </button>
     </div>
   );
 }
