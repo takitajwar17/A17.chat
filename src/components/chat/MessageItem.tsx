@@ -36,7 +36,7 @@ const MessageItem = memo(function MessageItem({
 
   return (
     <div className={`flex w-full ${role === "user" ? "justify-end" : "justify-start"} message-fade-in`}>
-      <div className={`flex ${role === "user" ? "max-w-[85%]" : "w-full"} flex-col gap-2`}>
+      <div className={`flex ${role === "user" ? "max-w-[80%]" : "w-full"} flex-col gap-2`}>
         {/* Message Content */}
         <div
           className={`relative ${
@@ -50,7 +50,7 @@ const MessageItem = memo(function MessageItem({
               <MarkdownContent content={content} />
             </div>
           ) : (
-            <p className="whitespace-pre-wrap text-sm leading-relaxed m-0">
+            <p className="whitespace-pre-wrap text-sm leading-relaxed m-0 word-wrap-break-word">
               {content}
             </p>
           )}

@@ -85,9 +85,19 @@
 
   /* T3 message bubble styles */
   .message-bubble {
-    @apply rounded-2xl px-4 py-3 max-w-[85%] break-words;
+    @apply rounded-2xl px-4 py-3;
     word-wrap: break-word;
     overflow-wrap: break-word;
+    hyphens: auto;
+    word-break: normal;
+  }
+
+  /* Utility class for proper word wrapping */
+  .word-wrap-break-word {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    word-break: normal;
   }
 
   .message-user {
