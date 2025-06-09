@@ -262,10 +262,10 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
             </Link>
           </div>
           
-          {/* Collapse Toggle Button */}
+          {/* Collapse Toggle Button - Hidden on mobile (below lg breakpoint) */}
           <button
             onClick={onToggleCollapse}
-            className="flex items-center justify-center w-8 h-8 rounded-lg text-macchiato-text hover:bg-macchiato-surface0 transition-colors"
+            className="hidden lg:flex items-center justify-center w-8 h-8 rounded-lg text-macchiato-text hover:bg-macchiato-surface0 transition-colors"
             aria-label="Collapse sidebar"
           >
             <PanelLeftIcon className="h-4 w-4" />
