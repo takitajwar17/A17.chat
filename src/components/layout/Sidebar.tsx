@@ -77,11 +77,10 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
   );
 
   /**
-   * Creates a new chat and navigates to it
+   * Navigate to home page for new chat (don't create chat until first message)
    */
-  const handleNewChat = async () => {
-    const newChat = await db.createChat();
-    router.push(`/chat/${newChat.id}`);
+  const handleNewChat = () => {
+    router.push("/");
   };
 
   const renderChatItem = (chat: { id: string; title?: string; updated_at: Date }) => (

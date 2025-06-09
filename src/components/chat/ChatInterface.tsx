@@ -30,6 +30,24 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
   
   // Get sidebar collapse state for proper positioning
   const { isCollapsed } = useSidebarContext();
+  
+  // Track if we should auto-submit a pending message
+  const shouldAutoSubmit = useRef(false);
+  
+  // Check for pending message from new chat creation
+  useEffect(() => {
+    if (chatId && typeof window !== 'undefined') {
+      const pendingMessage = sessionStorage.getItem('pendingNewChatMessage');
+      if (pendingMessage) {
+        // Clear the stored message
+        sessionStorage.removeItem('pendingNewChatMessage');
+        
+        // Set the pending message and flag for auto-submit
+        pendingUserMessage.current = pendingMessage;
+        shouldAutoSubmit.current = true;
+      }
+    }
+  }, [chatId]);
 
   // Fetch stored messages from database
   const storedMessages = useLiveQuery(async () => {
@@ -56,7 +74,7 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
   /**
    * Handle AI responses with streaming and database storage
    */
-  const { messages: sessionMessages, input, handleInputChange, handleSubmit, isLoading, stop } = useChat({
+  const { messages: sessionMessages, input, handleInputChange, handleSubmit, isLoading, stop, setInput } = useChat({
     api: "/api/chat",
     body: { model: currentModel },
     initialMessages: transformedMessages,
@@ -92,6 +110,24 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
       }
     },
   });
+  
+  // Auto-submit pending message when chat is ready
+  useEffect(() => {
+    if (shouldAutoSubmit.current && pendingUserMessage.current && setInput) {
+      shouldAutoSubmit.current = false;
+      
+      // Set the input and submit
+      setInput(pendingUserMessage.current);
+      
+      // Submit after input is set
+      setTimeout(() => {
+        const form = document.querySelector('form');
+        if (form) {
+          form.requestSubmit();
+        }
+      }, 50);
+    }
+  }, [setInput, chatId]);
 
   /**
    * Use session messages directly since they include initialMessages + streaming updates
@@ -107,20 +143,24 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
     if (!input.trim()) return;
 
     try {
-      let activeChatId = chatId;
-
-      // Create new chat if none exists
-      if (!activeChatId) {
+      // Create new chat if none exists (first message from home page)
+      if (!chatId) {
         const newChat = await db.createChat();
-        activeChatId = newChat.id;
-        router.push(`/chat/${activeChatId}`);
-        return; // Let the new chat handle the message
+        
+        // Store the message in sessionStorage to be picked up by the new chat page
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('pendingNewChatMessage', input.trim());
+        }
+        
+        // Navigate to the new chat - the message will be auto-submitted there
+        router.push(`/chat/${newChat.id}`);
+        return;
       }
 
       // Store the current input to save later in onFinish
       pendingUserMessage.current = input.trim();
 
-      // Just submit to AI
+      // Submit to AI for existing chat
       handleSubmit(e);
     } catch (error) {
       console.error("Error submitting message:", error);
