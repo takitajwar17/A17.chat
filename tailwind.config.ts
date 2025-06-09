@@ -57,6 +57,8 @@ export default {
         accent: colors.macchiato.pink,
         muted: colors.macchiato.overlay0,
         border: colors.macchiato.surface2,
+        success: colors.macchiato.green,
+        error: colors.macchiato.red,
       },
       scrollbar: {
         width: '2px',

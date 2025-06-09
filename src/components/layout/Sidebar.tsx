@@ -5,7 +5,8 @@ import { db } from "@/lib/db";
 import { useLiveQuery } from "dexie-react-hooks";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 
 interface SidebarProps {
   isCollapsed?: boolean;
@@ -17,6 +18,24 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
   const pathname = usePathname();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
+  const [hoveredBranchId, setHoveredBranchId] = useState<string | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
+  const branchIconRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * Update tooltip position when hovering
+   */
+  useEffect(() => {
+    if (hoveredBranchId && branchIconRef.current) {
+      const rect = branchIconRef.current.getBoundingClientRect();
+      setTooltipPosition({
+        x: rect.right + 8, // 8px offset to the right
+        y: rect.top
+      });
+    } else {
+      setTooltipPosition(null);
+    }
+  }, [hoveredBranchId]);
 
   /**
    * Formats a date to display in the chat list
@@ -38,6 +57,34 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
       }).format(date);
     }
   };
+
+  /**
+   * Format the branch creation time
+   */
+  const formatBranchTime = (date: Date) => {
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: true,
+    }).format(date);
+  };
+
+  // Get branch information for hovered chat
+  const branchInfo = useLiveQuery(async () => {
+    if (!hoveredBranchId) return null;
+    
+    const hoveredChat = await db.chats.get(hoveredBranchId);
+    if (!hoveredChat?.branchedFromChatId) return null;
+
+    const originalChat = await db.chats.get(hoveredChat.branchedFromChatId);
+
+    return {
+      originalChat,
+      branchCreatedAt: hoveredChat.created_at,
+    };
+  }, [hoveredBranchId]);
 
   /**
    * Groups chats by time period
@@ -83,30 +130,93 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
     router.push("/");
   };
 
-  const renderChatItem = (chat: { id: string; title?: string; updated_at: Date }) => (
-    <Link
-      key={chat.id}
-      href={`/chat/${chat.id}`}
-      className={`group flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-all hover:bg-macchiato-surface0/70 ${
-        pathname === `/chat/${chat.id}` 
-          ? "bg-macchiato-surface0" 
-          : ""
-      }`}
-    >
-      <div className="flex-1 min-w-0">
-        <span className="line-clamp-1 block text-macchiato-text font-normal">
-          {chat.title || "New Chat"}
-        </span>
-      </div>
-      <button
-        onClick={(e) => handleDeleteChat(e, chat.id)}
-        className="opacity-0 group-hover:opacity-100 ml-2 rounded p-1 text-macchiato-subtext0 hover:text-macchiato-red transition-all duration-200"
-        aria-label={`Delete chat: ${chat.title || "New Chat"}`}
+  /**
+   * Handle navigation to original or sibling branch
+   */
+  const handleBranchNavigation = (chatId: string) => {
+    router.push(`/chat/${chatId}`);
+  };
+
+  const renderChatItem = (chat: { id: string; title?: string; updated_at: Date; branchedFromChatId?: string }) => (
+    <div key={chat.id} className="relative">
+      <Link
+        href={`/chat/${chat.id}`}
+        className={`group flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-all hover:bg-macchiato-surface0/70 ${
+          pathname === `/chat/${chat.id}` 
+            ? "bg-macchiato-surface0" 
+            : ""
+        }`}
       >
-        <TrashIcon className="h-3.5 w-3.5" />
-      </button>
-    </Link>
+        <div className="flex-1 min-w-0 flex items-center gap-2">
+          {/* Show branch icon for branched chats with hover functionality */}
+          {chat.branchedFromChatId && (
+            <div 
+              ref={hoveredBranchId === chat.id ? branchIconRef : null}
+              className="relative"
+              onMouseEnter={() => setHoveredBranchId(chat.id)}
+              onMouseLeave={() => setHoveredBranchId(null)}
+            >
+              <BranchIcon className="h-3 w-3 text-macchiato-subtext0 flex-shrink-0 cursor-help" />
+            </div>
+          )}
+          <span className="line-clamp-1 block text-macchiato-text font-normal">
+            {chat.title || "New Chat"}
+          </span>
+        </div>
+        <button
+          onClick={(e) => handleDeleteChat(e, chat.id)}
+          className="opacity-0 group-hover:opacity-100 ml-2 rounded p-1 text-macchiato-subtext0 hover:text-macchiato-red transition-all duration-200"
+          aria-label={`Delete chat: ${chat.title || "New Chat"}`}
+        >
+          <TrashIcon className="h-3.5 w-3.5" />
+        </button>
+      </Link>
+    </div>
   );
+
+  // Portal-based tooltip component
+  const BranchTooltip = () => {
+    if (!hoveredBranchId || !branchInfo || !tooltipPosition) return null;
+
+    const tooltipContent = (
+      <div 
+        className="fixed w-64 p-3 bg-macchiato-surface0 border border-macchiato-surface1 rounded-lg shadow-xl text-xs z-[99999]"
+        style={{
+          left: tooltipPosition.x,
+          top: tooltipPosition.y,
+        }}
+      >
+        <div className="space-y-2">
+          {/* Branched from */}
+          <div>
+            <span className="text-macchiato-subtext0">Branched from:</span>
+            {branchInfo.originalChat && (
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleBranchNavigation(branchInfo.originalChat!.id);
+                }}
+                className="ml-1 text-macchiato-mauve hover:text-macchiato-mauve/80 font-medium underline"
+              >
+                {branchInfo.originalChat.title || "Untitled Chat"}
+              </button>
+            )}
+          </div>
+          
+          {/* Branch creation time */}
+          <div className="text-macchiato-subtext1">
+            {formatBranchTime(branchInfo.branchCreatedAt)}
+          </div>
+        </div>
+      </div>
+    );
+
+    // Render tooltip using portal to document body
+    return typeof window !== 'undefined' 
+      ? createPortal(tooltipContent, document.body)
+      : null;
+  };
 
   // Render collapsed state as floating horizontal buttons
   if (isCollapsed) {
@@ -206,6 +316,8 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
           </div>
         )}
       </div>
+
+      <BranchTooltip />
     </div>
   );
 }
@@ -253,6 +365,22 @@ function PanelRightIcon(props: React.ComponentProps<"svg">) {
     <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <rect width="18" height="18" x="3" y="3" rx="2" />
       <path d="M15 3v18" />
+    </svg>
+  );
+}
+
+// Branch icon for branched chats using GitHub branch SVG
+function BranchIcon(props: React.ComponentProps<"svg">) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 640 1024"
+      fill="currentColor"
+    >
+      <path d="M512 192c-70.625 0-128 57.344-128 128 0 47.219 25.875 88.062 64 110.281V448c0 0 0 128-128 128-53.062 0-94.656 11.375-128 28.812V302.28099999999995c38.156-22.219 64-63.062 64-110.281 0-70.656-57.344-128-128-128S0 121.34400000000005 0 192c0 47.219 25.844 88.062 64 110.281V721.75C25.844 743.938 0 784.75 0 832c0 70.625 57.344 128 128 128s128-57.375 128-128c0-33.5-13.188-63.75-34.25-86.625C240.375 722.5 270.656 704 320 704c254 0 256-256 256-256v-17.719c38.125-22.219 64-63.062 64-110.281C640 249.34400000000005 582.625 192 512 192zM128 128c35.406 0 64 28.594 64 64s-28.594 64-64 64-64-28.594-64-64S92.594 128 128 128zM128 896c-35.406 0-64-28.625-64-64 0-35.312 28.594-64 64-64s64 28.688 64 64C192 867.375 163.406 896 128 896zM512 384c-35.375 0-64-28.594-64-64s28.625-64 64-64 64 28.594 64 64S547.375 384 512 384z"/>
     </svg>
   );
 }

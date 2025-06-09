@@ -16,3 +16,17 @@ export interface ChatMessage {
   content: string;
   role: "user" | "assistant" | "system";
 }
+
+/**
+ * Interface for chat branching response data
+ */
+export interface BranchChatResponse {
+  newChatId: string;
+  branchedChat: {
+    id: string;
+    title?: string;
+    created_at: string;
+    branchedFromChatId: string;
+  };
+  messageCount: number;
+}

@@ -238,7 +238,7 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
   }, []);
 
   return (
-    <div className="relative flex h-full flex-col bg-macchiato-base">
+    <div className="relative flex h-full flex-col bg-background">
       {/* Chat Messages Container */}
       <div 
         ref={scrollAreaRef}
@@ -248,8 +248,10 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
         <div className="w-full max-w-2xl mx-auto">
           <MessageList 
             messages={allMessages} 
-            isLoading={isLoading} 
+            isLoading={isLoading}
             isAwaitingResponse={isAwaitingResponse}
+            chatId={chatId}
+            currentModel={currentModel}
           />
         </div>
       </div>
@@ -262,7 +264,7 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
           <div className="w-full max-w-2xl mx-auto flex justify-center">
             <button
               onClick={scrollToBottom}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-macchiato-surface0/70 backdrop-blur-md border border-macchiato-surface1/30 text-macchiato-text shadow-lg transition-all duration-200 hover:bg-macchiato-surface1/80 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-macchiato-mauve/50"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary/70 backdrop-blur-md border border-border/30 text-foreground shadow-lg transition-all duration-200 hover:bg-secondary/80 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
               aria-label="Scroll to bottom"
             >
               <ArrowDownIcon className="h-5 w-5" />
@@ -275,11 +277,11 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
       <div className={`fixed bottom-0 left-0 right-0 z-30 px-4 sm:px-6 lg:px-8 ${
         isCollapsed ? 'lg:left-0' : 'lg:left-72'
       }`}>
-        <div className="w-full max-w-3xl mx-auto">
-          {/* Outer Padding Container */}
-          <div className="bg-macchiato-surface0/60 backdrop-blur-xl rounded-t-2xl pt-2 px-2">
-            {/* Floating Card Container */}
-            <div className="bg-macchiato-surface0/90 backdrop-blur-xl border border-macchiato-surface0/50 rounded-t-xl shadow-2xl shadow-black/20 p-4 space-y-3">
+                  <div className="w-full max-w-3xl mx-auto">
+            {/* Outer Padding Container */}
+            <div className="bg-secondary/60 backdrop-blur-xl rounded-t-2xl pt-2 px-2">
+              {/* Floating Card Container */}
+              <div className="bg-secondary/90 backdrop-blur-xl border border-border/50 rounded-t-xl shadow-2xl shadow-background/20 p-4 space-y-3">
             <InputArea
               input={input}
               handleInputChange={handleInputChange}

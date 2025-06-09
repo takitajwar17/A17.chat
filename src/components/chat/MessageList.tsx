@@ -2,26 +2,40 @@
 import { Message } from "ai";
 import { memo } from "react";
 import MessageItem from "./MessageItem";
+import { ModelRegistry } from "@/lib/constants/models";
 
 interface MessageListProps {
   messages: Message[];
   isLoading?: boolean;
   isAwaitingResponse?: boolean;
+  chatId?: string; // Add chatId for branching support
+  currentModel?: string; // Add current model for assistant message display
 }
 
 /**
- * Message list container with minimal T3-style layout and compact spacing
- * Handles the display of all chat messages with proper formatting
+ * Message list container with semantic styling and compact spacing
+ * Handles the display of all chat messages with proper formatting and branching support
  */
-const MessageList = memo(function MessageList({ messages, isLoading, isAwaitingResponse }: MessageListProps) {
+const MessageList = memo(function MessageList({ 
+  messages, 
+  isLoading, 
+  isAwaitingResponse,
+  chatId,
+  currentModel
+}: MessageListProps) {
   
+  // Get model display name from registry
+  const modelDisplayName = currentModel && ModelRegistry[currentModel] 
+    ? ModelRegistry[currentModel].name 
+    : undefined;
+
   // Show welcome message if no messages exist
   if (messages.length === 0) {
     return (
       <div className="flex h-full flex-col justify-center space-y-4 py-8 pt-16">
         {/* Welcome Message - Left aligned and bigger */}
         <div className="text-left">
-          <h1 className="text-4xl font-medium text-macchiato-text mb-8">
+          <h1 className="text-4xl font-medium text-foreground mb-8">
             How can I help you?
           </h1>
           
@@ -39,7 +53,7 @@ const MessageList = memo(function MessageList({ messages, isLoading, isAwaitingR
           {suggestedPrompts.map((prompt, index) => (
             <div
               key={index}
-              className="text-left px-0 py-3 rounded-lg bg-transparent text-macchiato-subtext1 hover:bg-macchiato-surface0/30 transition-colors cursor-pointer text-base"
+              className="text-left px-0 py-3 rounded-lg bg-transparent text-muted hover:bg-secondary/30 transition-colors cursor-pointer text-base"
             >
               {prompt}
             </div>
@@ -68,6 +82,9 @@ const MessageList = memo(function MessageList({ messages, isLoading, isAwaitingR
             content={message.content}
             timestamp={message.createdAt ? new Date(message.createdAt) : new Date()}
             isLoading={shouldShowLoading}
+            chatId={chatId}
+            messageIndex={index}
+            currentModel={currentModel}
           />
         );
       })}
@@ -78,23 +95,26 @@ const MessageList = memo(function MessageList({ messages, isLoading, isAwaitingR
           role="assistant"
           content=""
           isLoading={true}
+          chatId={chatId}
+          messageIndex={messages.length}
+          currentModel={currentModel}
         />
       )}
     </div>
   );
 });
 
-// Action Button Component - Properly sized for left-aligned layout
+// Action Button Component - Properly sized for left-aligned layout with semantic colors
 function ActionButton({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
-    <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-macchiato-surface0 bg-transparent text-macchiato-text hover:bg-macchiato-surface0/50 transition-colors">
+    <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-transparent text-foreground hover:bg-secondary/50 transition-colors">
       {icon}
       <span className="text-sm font-medium">{label}</span>
     </button>
   );
 }
 
-// Suggested prompts matching the T3 interface
+// Suggested prompts matching the interface
 const suggestedPrompts = [
   "How does AI work?",
   "Are black holes real?",

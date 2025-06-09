@@ -3,6 +3,7 @@ export interface Chat {
   title?: string;
   created_at: Date;
   updated_at: Date;
+  branchedFromChatId?: string;
 }
 
 export interface StoredMessage {
