@@ -56,7 +56,7 @@ function ModelSelector({ currentModel, onModelChange }: ModelSelectorProps) {
         className="flex items-center gap-1.5 px-2 py-1.5 text-xs text-macchiato-text hover:bg-macchiato-surface0/50 rounded-lg transition-colors border border-macchiato-surface0"
         aria-label="Search"
       >
-        <SearchIcon className="h-3.5 w-3.5" />
+        <GlobeIcon className="h-3.5 w-3.5" />
         <span>Search</span>
       </button>
       
@@ -64,7 +64,7 @@ function ModelSelector({ currentModel, onModelChange }: ModelSelectorProps) {
         className="flex h-7 w-7 items-center justify-center text-macchiato-subtext0 hover:text-macchiato-text transition-colors rounded-lg hover:bg-macchiato-surface0/50 border border-macchiato-surface0"
         aria-label="Upload"
       >
-        <UploadIcon className="h-3.5 w-3.5" />
+        <ClipIcon className="h-3.5 w-3.5" />
       </button>
     </div>
   );
@@ -109,7 +109,7 @@ function CheckIcon(props: React.ComponentProps<"svg">) {
   );
 }
 
-function SearchIcon(props: React.ComponentProps<"svg">) {
+function GlobeIcon(props: React.ComponentProps<"svg">) {
   return (
     <svg
       {...props}
@@ -123,13 +123,14 @@ function SearchIcon(props: React.ComponentProps<"svg">) {
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <circle cx="11" cy="11" r="8" />
-      <path d="m21 21-4.35-4.35" />
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+      <path d="M2 12h20" />
     </svg>
   );
 }
 
-function UploadIcon(props: React.ComponentProps<"svg">) {
+function ClipIcon(props: React.ComponentProps<"svg">) {
   return (
     <svg
       {...props}
@@ -143,9 +144,7 @@ function UploadIcon(props: React.ComponentProps<"svg">) {
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-      <polyline points="17,8 12,3 7,8" />
-      <line x1="12" y1="3" x2="12" y2="15" />
+      <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" />
     </svg>
   );
 }
