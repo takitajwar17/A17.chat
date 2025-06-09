@@ -86,9 +86,9 @@ export const MarkdownContent = memo(function MarkdownContent({ content }: { cont
           h4: ({ children }) => <h4>{children}</h4>,
           h5: ({ children }) => <h5>{children}</h5>,
           h6: ({ children }) => <h6>{children}</h6>,
-          ul: ({ children }) => <ul>{children}</ul>,
-          ol: ({ children }) => <ol>{children}</ol>,
-          li: ({ children }) => <li>{children}</li>,
+          ul: ({ children }) => <ul className="list-disc list-outside space-y-1 my-2 ml-6">{children}</ul>,
+          ol: ({ children }) => <ol className="list-decimal list-outside space-y-1 my-2 ml-6">{children}</ol>,
+          li: ({ children }) => <li className="text-macchiato-text leading-relaxed">{children}</li>,
           blockquote: ({ children }) => <blockquote>{children}</blockquote>,
         } as Components
       }
