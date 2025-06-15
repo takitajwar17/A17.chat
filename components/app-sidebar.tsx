@@ -34,8 +34,8 @@ export function AppSidebar({ user }: { user: User | undefined }) {
               }}
               className="flex flex-row gap-3 items-center"
             >
-              <span className="text-lg font-semibold px-2 hover:bg-muted rounded-md cursor-pointer">
-                Chatbot
+              <span className="text-lg font-bold px-2 hover:bg-muted rounded-md cursor-pointer font-mono tracking-wider text-ctp-blue hover:text-ctp-mauve transition-colors duration-300">
+                A17.chat
               </span>
             </Link>
             <Tooltip>
